@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chess Online — Real-Time Multiplayer Chess</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       LOBBY SCREEN
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="lobby-screen" class="screen active">
+    <div class="lobby-bg"></div>
+    <div class="lobby-container">
+
+      <!-- Logo -->
+      <div class="logo">
+        <div class="logo-icon">♟</div>
+        <div class="logo-text">
+          <h1>Chess<span>Online</span></h1>
+          <p>Real-time multiplayer</p>
+        </div>
+      </div>
+
+      <!-- Main card -->
+      <div class="lobby-card">
+        <!-- Name input -->
+        <div class="form-group">
+          <label for="player-name-input">Your Name</label>
+          <input type="text" id="player-name-input" placeholder="Enter your name..." maxlength="20" autocomplete="off">
+        </div>
+
+        <!-- Time control -->
+        <div class="form-group">
+          <label for="time-control-select">Time Control</label>
+          <select id="time-control-select">
+            <option value="0">Unlimited ∞</option>
+            <option value="1+0">1 min — Bullet</option>
+            <option value="2+1">2+1 — Bullet</option>
+            <option value="3+0">3 min — Blitz</option>
+            <option value="3+2">3+2 — Blitz</option>
+            <option value="5+0" selected>5 min — Blitz</option>
+            <option value="5+3">5+3 — Blitz</option>
+            <option value="10+0">10 min — Rapid</option>
+            <option value="10+5">10+5 — Rapid</option>
+            <option value="15+10">15+10 — Rapid</option>
+            <option value="30+0">30 min — Classical</option>
+          </select>
+        </div>
+
+        <!-- Actions -->
+        <div class="lobby-actions">
+          <button id="create-room-btn" class="btn btn-primary">
+            <span class="btn-icon">+</span> Create Room
+          </button>
+
+          <div class="divider"><span>or join existing</span></div>
+
+          <div class="join-row">
+            <input type="text" id="room-code-input" placeholder="ROOM CODE" maxlength="6" autocomplete="off" class="code-input">
+            <button id="join-room-btn" class="btn btn-secondary">Join</button>
+          </div>
+        </div>
+
+        <!-- Share section (shown after creating room) -->
+        <div id="share-code-section" style="display:none">
+          <div class="share-card">
+            <p>Share this code with your opponent:</p>
+            <div class="code-display-row">
+              <span id="room-code-display" class="code-display"></span>
+              <button id="copy-code-btn" class="btn btn-small">Copy</button>
+            </div>
+          </div>
+          <p id="waiting-msg" class="waiting-text">
+            <span class="dot-pulse"></span> Waiting for opponent to join...
+          </p>
+        </div>
+
+        <!-- Status -->
+        <div id="game-status" class="game-status" style="display:none"></div>
+      </div>
+
+      <!-- Features list -->
+      <div class="feature-list">
+        <div class="feature"><span>✓</span> Full Chess Rules</div>
+        <div class="feature"><span>✓</span> Real-time Play</div>
+        <div class="feature"><span>✓</span> Multiple Themes</div>
+        <div class="feature"><span>✓</span> Move History</div>
+        <div class="feature"><span>✓</span> Chat</div>
+        <div class="feature"><span>✓</span> Timers</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GAME SCREEN
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="game-screen" class="screen">
+    <div class="game-layout">
+
+      <!-- ── Left Panel ─────────────────────────────────────── -->
+      <div class="side-panel left-panel">
+
+        <!-- Black player info (top = opponent when white) -->
+        <div class="player-card" id="black-player-card">
+          <div class="player-avatar black-avatar">♚</div>
+          <div class="player-info">
+            <div class="player-name" id="player-black-name">Black</div>
+            <div class="captured-pieces" id="black-captured"></div>
+          </div>
+          <div id="timer-black" class="timer"></div>
+        </div>
+
+        <!-- Board wrapper -->
+        <div class="board-wrapper">
+          <div class="board-border">
+            <div id="chess-board" class="chess-board"></div>
+          </div>
+        </div>
+
+        <!-- White player info (bottom = me when white) -->
+        <div class="player-card" id="white-player-card">
+          <div class="player-avatar white-avatar">♔</div>
+          <div class="player-info">
+            <div class="player-name" id="player-white-name">White</div>
+            <div class="captured-pieces" id="white-captured"></div>
+          </div>
+          <div id="timer-white" class="timer"></div>
+        </div>
+
+        <!-- Turn / Status -->
+        <div id="turn-indicator" class="turn-indicator"></div>
+        <div id="game-status" class="game-status" style="display:none"></div>
+
+        <!-- Draw response -->
+        <div id="draw-response" style="display:none" class="draw-response">
+          <span>Draw offered</span>
+          <button id="accept-draw-btn" class="btn btn-small btn-success">Accept</button>
+          <button id="decline-draw-btn" class="btn btn-small btn-danger">Decline</button>
+        </div>
+
+        <!-- Game controls -->
+        <div class="game-controls">
+          <button id="flip-btn" class="ctrl-btn" title="Flip Board">⇅</button>
+          <button id="draw-btn" class="ctrl-btn" title="Offer Draw">½</button>
+          <button id="resign-btn" class="ctrl-btn ctrl-danger" title="Resign">⚑</button>
+          <button id="rematch-btn" class="ctrl-btn ctrl-success" title="Request Rematch" style="display:none">↺</button>
+          <button id="settings-btn" class="ctrl-btn" title="Settings">⚙</button>
+        </div>
+
+      </div>
+
+      <!-- ── Right Panel ────────────────────────────────────── -->
+      <div class="side-panel right-panel">
+
+        <!-- Timers for mobile -->
+        <div id="timers-section" class="timers-section" style="display:none">
+          <div class="timer-row">
+            <span>⬜ White:</span>
+            <span id="timer-white-mobile" class="timer-val"></span>
+          </div>
+          <div class="timer-row">
+            <span>⬛ Black:</span>
+            <span id="timer-black-mobile" class="timer-val"></span>
+          </div>
+        </div>
+
+        <!-- Move History -->
+        <div class="panel-section">
+          <div class="panel-title">Move History</div>
+          <div id="move-history" class="move-history"></div>
+        </div>
+
+        <!-- Chat -->
+        <div class="panel-section chat-section">
+          <div class="panel-title">Chat</div>
+          <div id="chat-messages" class="chat-messages"></div>
+          <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="Message..." maxlength="200" autocomplete="off">
+            <button id="chat-send-btn" class="btn btn-small">Send</button>
+          </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="settings-panel" class="settings-panel">
+          <div class="panel-title">Board Themes</div>
+          <div class="theme-grid">
+            <button class="theme-btn active" data-theme="classic" id="theme-classic">
+              <div class="theme-preview classic-prev"></div>
+              <span>Classic Wood</span>
+            </button>
+            <button class="theme-btn" data-theme="marble" id="theme-marble">
+              <div class="theme-preview marble-prev"></div>
+              <span>Marble</span>
+            </button>
+            <button class="theme-btn" data-theme="green" id="theme-green">
+              <div class="theme-preview green-prev"></div>
+              <span>Green</span>
+            </button>
+            <button class="theme-btn" data-theme="dark" id="theme-dark">
+              <div class="theme-preview dark-prev"></div>
+              <span>Dark</span>
+            </button>
+            <button class="theme-btn" data-theme="ocean" id="theme-ocean">
+              <div class="theme-preview ocean-prev"></div>
+              <span>Ocean</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PROMOTION DIALOG
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="promotion-dialog" class="promotion-dialog">
+    <div class="promo-card">
+      <div class="promo-title">Choose Promotion</div>
+      <div class="promotion-pieces"></div>
+    </div>
+  </div>
+
+
+  <!-- Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/chess-engine.js"></script>
+  <script src="/js/network.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/game.js"></script>
+</body>
+</html>
